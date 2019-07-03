@@ -1,0 +1,26 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2019-07-03T21:21:09Z",
+  "id": "lit-element",
+  "duration": 150,
+  "title": "LitElement; el futuro de Polymer",
+  "authors": "Andrés Rondán y Fernando Vegas",
+  "summary": "En este codelab aprenderemos lo más básico de LitElement haciendo un ToDo App",
+  "source": "1ph59z2Rs0nrCWAgLs7-KGmoJcuSyv7mBLAI6i-yGvaA",
+  "theme": "web",
+  "status": [
+    "draft"
+  ],
+  "category": [
+    "Web"
+  ],
+  "tags": [
+    "bbva",
+    "lit-element",
+    "ninja"
+  ],
+  "url": "lit-element"
+}

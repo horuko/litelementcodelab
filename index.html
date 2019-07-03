@@ -1,1 +1,455 @@
-hello
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>LitElement; el futuro de Polymer</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="lit-element"
+                  title="LitElement; el futuro de Polymer"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Introducción" duration="5">
+        <p>Hasta ahora en una web hemos usado spans, divs, ps... y otras etiquetas para implementarla. ¿Te imaginas que exista la posibilidad de que cada uno de esos componentes tenga un comportamento y visual bien definido y diferenciado? Esto permitiría reutilizar dichos componentes a través de toda la web, de toda la organización o de una comunidad de desarrollo. Es ahí donde entran los Web Components. </p>
+<p>Mediante Web Components puedes crear etiquetas html con el comportamiento, visual e interacción que te interese y reutilizarlo donde sea necesario. Algunos ejemplos podrían ser:</p>
+<pre><code>&lt;tab-bar tab1=&#34;Resumen&#34; tab2=&#34;Listado&#34;&gt;&lt;/tab-bar&gt;
+&lt;side-menu item1=&#34;Ver mi perfil&#34; item2=&#34;Ajustes&#34; item3=&#34;salir&#34;&gt;&lt;/side-menu&gt;
+</code></pre>
+<p>El mismo nombre del tag html ya me dice para qué sirve ese elemento html</p>
+<h2 is-upgraded><strong>Evolución de LitElement</strong></h2>
+<p>LitElement es una librería que nos ayuda a crear Web Components de forma rápida y sencilla.</p>
+<p>Quienes ya conozcan Polymer 1 y 2 sabrán que para usar un componente había que incluirlo mediante un import html convencional. Básicamente se implementaba el comportamiento en javascript, se pintaba la interfaz mediante html + css y luego se incluía donde se usara mediante dicho import.</p>
+<pre><code> &lt;link rel=&#34;import&#34; href=&#34;../../bower_components/tab-bar.html&#34;&gt;
+</code></pre>
+<p>Además, todos los componentes se distribuían a través de bower.</p>
+<p class="image-container"><img style="width: 418.50px" src="img/937cb62d814a6bcf.png"></p>
+<p>Con Lit Element se le ha dado un enfoque más <em>Hipster, </em>bower está deprecado, y los componentes se importan cómo módulos ES6. </p>
+<pre><code>//index.html
+
+&lt;script type=&#34;module&#34;&gt;
+   import &#34;../../bower_components/tab-bar.html&#34;;
+&lt;/script&gt;</code></pre>
+<p>Además, a través de su uso con Lit Html se puede explotar otras características de ES6 con los <em>tagged templates</em> para renderizar partes de nuestro html y que se <em>rerendericen</em> únicamente aquellas partes que cambian.</p>
+<h2 is-upgraded><strong>Qué vamos a aprender</strong></h2>
+<p>En este curso vamos a implementar una app con Web Componentes usando Lit Element.</p>
+<p>La aplicación será un gestor de tareas, en el que podrás ir creando una check list para ver qué te queda pendiente por hacer. Al hacer click sobre cualquier check, la tarea aparecerá como realizada. Además aparecerá un aspa desde el que se podrán eliminar tareas.</p>
+<p class="image-container"><img style="width: 320.00px" src="img/64b718713ddda09f.gif"></p>
+<p>Para ello será necesario aplicar y entender algunos conceptos fundamentales: Extender de clase base, hooks de un componente, registrar un componente, binding de propiedades, estilado de un componente y propagación de eventos.</p>
+<h2 is-upgraded><strong>Gui online</strong></h2>
+<p>Vamos a ir al grano: <em>http://bit.ly/2XFD0MN</em></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Creación de un componente LitElement" duration="40">
+        <p>Lo primero que vamos a hacer es crear un componente muy básico, que pinte una serie de datos de entrada.</p>
+<h2 is-upgraded><strong>Extender de la clase base y registrar el componente</strong></h2>
+<p>Para este ejercicio crearemos un archivo .js llamado <em>my-profile.js</em></p>
+<pre><code>//my-profile.js
+
+import {html, LitElement} from &#39;lit-element&#39;;
+
+class MyProfile extends LitElement {
+
+   render() {
+      return html`hello profile`;
+   }
+}
+
+customElements.define(&#39;my-profile&#39;, MyProfile);
+</code></pre>
+<p>Ahora probamos que el componente se crea sin problemas.</p>
+<p>Vamos a index.js y añadimos</p>
+<pre><code>//index.js
+
+import &#39;./src/my-profile.js&#39;;
+</code></pre>
+<p>Y usamos el Web component que hemos creado en index.html</p>
+<pre><code>&lt;!-- index.html --&gt;
+...
+&lt;body&gt;
+   &lt;my-profile&gt;&lt;/my-profile&gt;
+&lt;/body&gt;
+...</code></pre>
+<h2 is-upgraded><strong>Templating, Propiedades y Estilo</strong></h2>
+<p>Vamos a añadir ahora las propiedades <em>Nombre, Apellidos y Edad, </em>para pintar datos que nos vengan de entrada al <em>Web Component. </em>Además le vamos a dar un estilo al componente para que se pinte de color blanco.</p>
+<p>Es necesario añadir la propiedad <em>properties</em>, que simplemente es un json con los nombres de las propiedades como keys. Cada <em>key</em> irá acompañada de su tipo.</p>
+<pre><code>//my-profile.js
+
+import {html, LitElement} from &#39;lit-element&#39;;
+
+class MyProfile extends LitElement {
+
+  static get properties() {
+    return {
+      name: String,
+      surname: String,
+      age: Number
+    };
+  }
+
+  static get styles() {
+    return css`
+       span {
+         color: white;
+       }`;
+  } 
+
+  render() {
+    return html `
+      &lt;div&gt;&lt;span&gt;Nombre: &lt;/span&gt;&lt;span&gt;${this.name}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Apellidos: &lt;/span&gt;&lt;span&gt;${this.surname}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Edad: &lt;/span&gt;&lt;span&gt;${this.age} años&lt;/span&gt;&lt;/div&gt;`;
+  }
+
+}
+
+customElements.define(&#39;my-profile&#39;, MyProfile);
+</code></pre>
+<p>Para pintarlo, modificamos el index.html</p>
+<pre><code>&lt;!-- index.html --&gt;
+...
+&lt;body&gt;
+   &lt;my-profile name=&#34;Andrés&#34; surname=&#34;Rondán&#34; age=&#34;24&#34;&gt;&lt;/my-profile&gt;
+&lt;/body&gt;
+...</code></pre>
+<p>Se puede apreciar cómo se informan las propiedades que se exponen en el WebComponent, que son justo las definidas como <em>properties</em>.</p>
+<p>Veamos ahora cómo crear una computada. Una computada es una propiedad de la clase, que no del Web Component (no se expone en la interfaz del componente cuando lo pintas). Mientras que en Polymer era necesario indicar las propiedades que se necesitaban observar, en lit no es así, simplemente definiéndola como un get es suficiente.</p>
+<pre><code>// my-profile.js
+...
+  get completeName() {
+    return `${this.name} ${this.surname}`;
+  }
+
+  set completeName(value) {
+    const parts = value.split(&#39; &#39;);
+
+    this.name = value[0];
+    this.surname = value[1];
+  }
+
+  render() {
+     return html `
+        &lt;div&gt;&lt;span&gt;Nombre: &lt;/span&gt;&lt;span&gt;${this.completeName}&lt;/span&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;span&gt;Edad: &lt;/span&gt;&lt;span&gt;${this.age} años&lt;/span&gt;&lt;/div&gt;`;
+  }
+
+...</code></pre>
+<p>Ahora vamos a completar el ejemplo pintando un listado de skills.</p>
+<pre><code>//my-profile.js
+
+class MyProfile extends LitElement {
+
+  static get properties() {
+    return {
+      name: String,
+      surname: String,
+      age: Number,
+      skills: Array
+    };
+  }
+  static get styles() {
+    return css`
+    :host {
+      color: white;
+    }`;
+  } 
+
+  render() {
+      
+    return html `
+      &lt;div&gt;&lt;span&gt;Nombre: &lt;/span&gt;&lt;span&gt;${this.completeName}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Apellidos: &lt;/span&gt;&lt;span&gt;${this.surname}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Edad: &lt;/span&gt;&lt;span&gt;${this.age} años&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;Skills&lt;/div&gt;
+      &lt;ul&gt;
+        ${this.skills.map((skill) =&gt; 
+          html`&lt;li&gt; ${skill} &lt;/li&gt;`
+        )}
+      &lt;/ul&gt;`;
+  }
+
+}
+
+customElements.define(&#39;my-profile&#39;, MyProfile);</code></pre>
+<h2 is-upgraded><strong>Eventos y modificación de variables</strong></h2>
+<p>Para capturar los eventos, o bien lo hacemos mediante la forma tradicional (addEventListener) o bien lo podemos hacer con <em>@&lt;nombre-evento&gt;</em>.</p>
+<p>Por ejemplo, para capturar el click usaríamos <em>@click</em>. LitElement proporcion dos formas de bindear los eventos:</p>
+<pre><code>html`&lt;my-component @click=&#34;${this.onClick}&#34;&gt;&lt;/my-component&gt;`;</code></pre>
+<p>O bien ejecutar una función</p>
+<pre><code>html`&lt;my-component @click=&#34;${() =&gt; this.onClick(‘foo&#39;)}&#34;&gt;&lt;/my-component&gt;`;</code></pre>
+<p>Vamos a hacer que al hacer click en una de las skills esta se elimine de el listado. Para ello, modificamos <em>my-profile.js</em></p>
+<pre><code>//my-profile.js
+
+import { html, LitElement, css } from &#39;lit-element&#39;;
+
+
+class MyProfile extends LitElement {
+
+  ...
+
+  render() {
+      
+    return html `
+      &lt;div&gt;&lt;span&gt;Nombre: &lt;/span&gt;&lt;span&gt;${this.name}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Apellidos: &lt;/span&gt;&lt;span&gt;${this.surname}&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;span&gt;Edad: &lt;/span&gt;&lt;span&gt;${this.age} años&lt;/span&gt;&lt;/div&gt;
+      &lt;div&gt;Skills&lt;/div&gt;
+      &lt;ul&gt;
+        ${this.skills.map((skill) =&gt; html`&lt;li @click=&#34;${() =&gt; this.onClick(skill)}&#34;&gt; ${skill}`)}
+      &lt;/ul&gt;
+      `;
+    }
+
+  onClick(skill) {
+    this.skills = this.skills.filter((userSkill) =&gt; skill !== userSkill);
+  }
+
+}
+
+customElements.define(&#39;my-profile&#39;, MyProfile);
+</code></pre>
+<h2 is-upgraded>Lifecycle callbacks</h2>
+<p>Los <em>lifecycle callbacks</em> son una serie de métodos que se ejecutan durante el ciclo de vida de un LitElement. Estos se pueden sobreescribir para hacer que nuestro componente tenga un determinado comportamiento cuando ocurra algo. </p>
+<p>Además, también se pueden sobreescribir otros hooks nativos a los WebComponents, como <em>connectedCallback, disconnectedCalback...</em></p>
+<p>Algunos ejemplos:</p>
+<pre><code> performUpdate() {
+   setTimeout(() =&gt; {
+     super.performUpdate();
+   }, 5000)
+ }
+
+ shouldUpdate() {
+   console.log(&#39;ojo! se va a actualizar alguna propiedad&#39;);
+
+   return true;
+ }
+
+ firstUpdated() {
+   console.log(&#39;estoy listo!&#39;);
+ }
+
+ update(properties) {
+   console.log(&#39;se han cambiado estas propiedades&#39;, properties);
+
+   super.update(...arguments);
+ }
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ToDo App. Contexto" duration="8">
+        <h2 is-upgraded><strong>¿Cómo lo vamos a hacer?</strong></h2>
+<p>La aplicación está formada por los siguientes Componentes:</p>
+<ul>
+<li>Todo-app</li>
+<li>Add-item</li>
+<li>List-items</li>
+<li>Todo-item</li>
+</ul>
+<p>Todo-app escucha los eventos add-item (@add-item) del componente add-item y remove-item (@remove-item) del componente todo-item.</p>
+<ul>
+<li>Add-item debe añadir un elemento nuevo a todoList y actualizar el porcentaje de completado.</li>
+<li>Remove-item debe eliminar un elemento de todoList.</li>
+<li>status-change debe cambiar el porcentaje de completado.</li>
+<li>todoList es una propiedad de todo-app.</li>
+</ul>
+<p>Add-item tiene un input, que será el nombre de la tarea y debe emitir el evento addItem con lo introducido en el texto.</p>
+<p>List-item pinta todos los ToDos, usando el listado todoList y el componente todo-item. Además, cada elemento tiene un botón para eliminar el propio ToDo.</p>
+<p>El porcentaje de completado lo podemos hacer con una computada.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ToDo App. Crear un Item" duration="20">
+        <p>Vamos a <em>add-item.js </em>que es el que tiene la acción de añadir. En él encontraremos un input y un botón con una acción para el evento on-click sin emplementar.</p>
+<p>Vamos a mostrar por consola el valor del input al pulsar el botón:</p>
+<h2 is-upgraded><strong>Obtener el valor del input.</strong></h2>
+<pre><code>console.log(this.shadowRoot.getElementById(&#39;newItem&#39;).value);</code></pre>
+<h2 is-upgraded><strong>Propagar evento add-item</strong></h2>
+<p>Para insertar esa tarea en el listado de tareas de la app necesitamos notificar al padre del nombre de la tarea. Esto lo haremos mediante el evento add-item, pasándole el texto que ha introducido el usuario. Para ello crearemos un <em>CustomEvent </em>de la siguiente manera.</p>
+<pre><code>//add-item.js
+
+import { html, LitElement } from &#39;lit-element&#39;;
+import { addItemStyle } from &#39;./add-item-style&#39;;
+
+class AddItem extends LitElement {
+
+ // ...
+
+  addItem() {
+    const onAddItemEvent = new CustomEvent(&#39;add-item&#39;, { 
+      detail: { task: this.inputElement.value },
+      bubbles: true, 
+      composed: true 
+    });
+
+    this.dispatchEvent(onAddItemEvent);
+  }
+
+
+  get inputElement() {
+    return this.shadowRoot.getElementById(&#39;newItem&#39;);
+  }
+
+  // ...
+
+}
+
+customElements.define(&#39;add-item&#39;, AddItem);
+</code></pre>
+<p>Ahora tendremos que capturarlo en el padre e insertarlo en el <em>todoList. </em>Vamos a ver qué nos llega en el evento antes de continuar.</p>
+<pre><code>//todo-app.js
+
+import { html, LitElement } from &#39;lit-element&#39;;
+import &#39;./add-item&#39;;
+import &#39;./list-item&#39;;
+
+class TodoApp extends LitElement {
+
+  static get properties() {
+    return {};
+  }
+
+  onAddItem(e) {
+
+  }
+
+  render() {
+    return html `
+      &lt;add-item @add-item=&#34;${this.onAddItem}&#34;&gt;&lt;/add-item&gt;
+      &lt;list-items @remove-item=&#34;${this.onRemoveItem}&#34;
+        .todoList=&#34;${this.todoList}&#34;&gt;
+      &lt;/list-items&gt;
+      `;
+  }
+
+}
+
+customElements.define(&#39;todo-app&#39;, TodoApp);
+</code></pre>
+<p>Ahora lo insertamos en el <em>todoList</em></p>
+<pre><code>//todo-app.js
+
+import { html, LitElement } from &#39;lit-element&#39;;
+import &#39;./add-item&#39;;
+import &#39;./list-item&#39;;
+
+class TodoApp extends LitElement {
+
+//...
+
+  onAddItem(e) {
+    this.todoList = [...(this.todoList || []), e.detail.task];
+
+    console.log(this.todoList);
+  }
+
+//...
+
+}
+
+customElements.define(&#39;todo-app&#39;, TodoApp);
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ToDo App. Listado" duration="20">
+        <p>Para pintar el listado de tags existe el componente <em>list-item</em>, que recibe como entrada el <em>todoList</em> desde su padre, usando <em>repeat</em>. <em>Repeat </em>es una directiva de lit-html que optimiza el renderizado en el manejo de listas pesadas, ordenaciones, cambios etc.</p>
+<pre><code>//list-item.js
+
+ render() {
+    return html `
+      &lt;div class=&#34;lists&#34;&gt;
+        &lt;div class=&#34;list&#34;&gt;
+            &lt;div class=&#34;list-wrapper&#34;&gt;
+            ${repeat(this.todoList || [], (todoItem)=&gt;todoItem.id,(todoItem)=&gt;html`&lt;todo-item .todoItem=&#34;${todoItem}&#34;&gt;&lt;/todo-item&gt;`)}
+            &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;`;
+  }
+
+</code></pre>
+<p>Vamos a añadir un ternario para mostrar otro literal cuando no hay items en el listado de ToDos. Para ello, nos vamos a <em>list-item.js </em>e introducimos lo siguiente en el <em>render</em></p>
+<pre><code>//list-item.js
+
+ render() {
+    return html `
+      &lt;div class=&#34;lists&#34;&gt;
+        &lt;div class=&#34;list&#34;&gt;
+            &lt;h2 class=&#34;title&#34;&gt;
+              ${this.todoList ? html`Today&#39;s todo list`: html`Nothing to do ¯\\_(ツ)_/¯`}
+            &lt;/h2&gt;
+            &lt;div class=&#34;list-wrapper&#34;&gt;
+            ${repeat(this.todoList || [], (todoItem)=&gt;todoItem.id,(todoItem)=&gt;html`&lt;todo-item .todoItem=&#34;${todoItem}&#34;&gt;&lt;/todo-item&gt;`)}
+            &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;`;
+  }
+
+</code></pre>
+<p>A su vez, el <em>list-item </em>usa el <em>todo-item</em> para pintar cada ToDo. Si abrimos el <em>todo-item, </em>veremos que cada ToDo tiene 3 atributos: item, id y done, para representar el texto del ToDo, un identificador para poder manejarlo y un estado de si está hecho o no respectivamente.</p>
+<p>Tenemos pues que modificar el <em>onAddItem</em> del <em>todo-app.js </em>para insertar en el listado de ToDos los elementos de la forma que hemos definido:</p>
+<pre><code>//todo-app.js
+
+ onAddItem(e) {
+    const todo = {
+      id: btoa(Math.random()),
+      item: e.detail.task,
+      done: false
+    };
+    this.todoList = [...this.todoList, todo];
+
+    console.log(this.todoList);
+  }
+</code></pre>
+<p>Para inicializar una variable, se setea en el constructor de la clase</p>
+<pre><code>//todo-app.js
+
+ constructor() {
+    super();
+
+    this.todoList = [];
+  }
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="ToDo App. Practicamos." duration="57">
+        <h2 is-upgraded><strong>Ejercicio 1.- Hacer una computada que muestre el porcentaje de tareas completadas</strong></h2>
+<h2 is-upgraded><strong>Ejercicio 2.- Eliminar tareas del listado.</strong></h2>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+
+</body>
+</html>
